@@ -1,0 +1,31 @@
+.meals {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mealItem {
+  width: 303px;
+  height: 44px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  position: relative;
+}
+
+.mealName {
+  font-size: 16px;
+  font-weight: 400;
+  color: #000;
+}
+
+.emojis {
+  font-family: 'Galindo', cursive;
+  font-size: 25px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-20%);
+}

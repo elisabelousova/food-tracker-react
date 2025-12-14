@@ -1,0 +1,16 @@
+.normBlock {
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 6px 20px;
+  margin-top: 10px;
+  color: #000;
+}
+
+.text {
+  font-size: 16px;
+}
+
+.number {
+  font-weight: 700;
+  text-decoration: underline;
+}
