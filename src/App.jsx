@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./App.module.css";
 
 import Header from "./components/Header/Header";
@@ -7,21 +7,48 @@ import Meals from "./components/Meals/Meals";
 import AddMealButton from "./components/AddMealButton/AddMealButton";
 import Modal from "./components/Modal/Modal";
 
-export default function App() {
-  const [meals] = useState([
-    { name: "Завтрак" },
-    { name: "Обед" },
-    { name: "Ужин" },
-    { name: "+ Ещё" },
-  ]);
+import { getMeals, addMeal } from "./api/mealsApi";
 
-  const [percent] = useState(0);
+export default function App() {
+  const [meals, setMeals] = useState([]);
+  const [percent, setPercent] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // GET — загрузка данных с сервера
+  useEffect(() => {
+    async function loadMeals() {
+      try {
+        const data = await getMeals();
+        setMeals(data);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadMeals();
+  }, []);
+
+  // пересчёт нормы
+  useEffect(() => {
+    const total = meals.reduce((sum, m) => sum + (m.kcal || 0), 0);
+    setPercent(Math.round((total / 2000) * 100));
+  }, [meals]);
+
+  // POST — сохранение нового приёма пищи
+  async function handleSaveMeal(meal) {
+    try {
+      const saved = await addMeal(meal);
+      setMeals((prev) => [...prev, saved]);
+      setIsModalOpen(false);
+    } catch (e) {
+      alert("Сервер не запущен");
+    }
+  }
 
   return (
     <div className={styles.page}>
       <Header />
       <h2 className={styles.dateTitle}>21 марта, пятница</h2>
+
       <Norm percent={percent} />
       <Meals meals={meals} />
 
@@ -30,6 +57,7 @@ export default function App() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveMeal}
       />
     </div>
   );
