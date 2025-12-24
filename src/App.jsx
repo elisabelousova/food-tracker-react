@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./App.module.css";
 
 import Header from "./components/Header/Header";
@@ -9,8 +9,16 @@ import Modal from "./components/Modal/Modal";
 
 import { getMeals, addMeal } from "./api/mealsApi";
 
+// дефолтные приёмы пищи (fallback)
+const DEFAULT_MEALS = [
+  { name: "Завтрак", kcal: 0, B: 0, J: 0, U: 0 },
+  { name: "Обед", kcal: 0, B: 0, J: 0, U: 0 },
+  { name: "Ужин", kcal: 0, B: 0, J: 0, U: 0 },
+  { name: "+ Ещё", kcal: 0, B: 0, J: 0, U: 0 },
+];
+
 export default function App() {
-  const [meals, setMeals] = useState([]);
+  const [meals, setMeals] = useState(DEFAULT_MEALS);
   const [percent, setPercent] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -19,44 +27,69 @@ export default function App() {
     async function loadMeals() {
       try {
         const data = await getMeals();
-        setMeals(data);
+
+        if (Array.isArray(data) && data.length > 0) {
+          setMeals(data);
+        }
       } catch (e) {
-        console.error(e);
+        console.warn(
+          "Backend недоступен, используем локальные данные"
+        );
+        setMeals(DEFAULT_MEALS);
       }
     }
+
     loadMeals();
   }, []);
 
-  // пересчёт нормы
+  // пересчёт дневной нормы
   useEffect(() => {
-    const total = meals.reduce((sum, m) => sum + (m.kcal || 0), 0);
+    const total = meals.reduce(
+      (sum, m) => sum + (Number(m.kcal) || 0),
+      0
+    );
+
     setPercent(Math.round((total / 2000) * 100));
   }, [meals]);
 
   // POST — сохранение нового приёма пищи
-  async function handleSaveMeal(meal) {
+  const handleSaveMeal = useCallback(async (meal) => {
     try {
       const saved = await addMeal(meal);
       setMeals((prev) => [...prev, saved]);
       setIsModalOpen(false);
     } catch (e) {
-      alert("Сервер не запущен");
+      alert(
+        "Backend не запущен. Проверь JSON Server."
+      );
     }
-  }
+  }, []);
+
+  const openModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
 
   return (
     <div className={styles.page}>
       <Header />
-      <h2 className={styles.dateTitle}>21 марта, пятница</h2>
+
+      <h2 className={styles.dateTitle}>
+        21 марта, пятница
+      </h2>
 
       <Norm percent={percent} />
+
       <Meals meals={meals} />
 
-      <AddMealButton onClick={() => setIsModalOpen(true)} />
+      <AddMealButton onClick={openModal} />
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={closeModal}
         onSave={handleSaveMeal}
       />
     </div>
